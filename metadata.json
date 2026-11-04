@@ -1,0 +1,6 @@
+{
+  "name": "QR Restaurantes",
+  "description": "Plataforma profesional de cartas digitales QR para mesas, gestión de comandas en tiempo real, pedidos y generador de soportes QR para restaurantes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
