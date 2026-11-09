@@ -14,7 +14,7 @@ export async function renderPrintableQR(canvas: HTMLCanvasElement, url: string, 
     const inset = Math.round(size * 0.015);
     ctx.fillStyle = '#000000';
     ctx.fillRect(inset, inset, size - inset * 2, band - inset);
-    let fontSize = Math.round(size * 0.05);
+    let fontSize = Math.round(size * 0.065);
     ctx.font = `900 ${fontSize}px Arial, sans-serif`;
     while (ctx.measureText(label).width > size * 0.9 && fontSize > 1) {
       fontSize--; ctx.font = `900 ${fontSize}px Arial, sans-serif`;
