@@ -14,13 +14,16 @@ export async function renderPrintableQR(canvas: HTMLCanvasElement, url: string, 
     const inset = Math.round(size * 0.015);
     ctx.fillStyle = '#000000';
     ctx.fillRect(inset, inset, size - inset * 2, band - inset);
-    let fontSize = Math.round(size * 0.065);
+    const numericLabel = /^\d[\d\s.,/#()\-]*$/.test(label);
+    let fontSize = Math.round(size * (numericLabel ? 0.12 : 0.065));
     ctx.font = `900 ${fontSize}px Arial, sans-serif`;
     while (ctx.measureText(label).width > size * 0.9 && fontSize > 1) {
       fontSize--; ctx.font = `900 ${fontSize}px Arial, sans-serif`;
     }
-    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, size / 2, (band + inset) / 2);
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    const metrics = ctx.measureText(label);
+    const centerY = (band + inset) / 2;
+    ctx.fillText(label, size / 2, centerY + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2);
   }
   ctx.drawImage(qr, 0, band);
   ctx.strokeStyle = '#000000'; ctx.lineWidth = Math.max(1, size * 0.006);
