@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useQR } from '../context/QRContext';
 import { RestaurantQR } from '../types/restaurant';
 import { QRCanvas } from './QRCanvas';
 import { downloadRestaurantQRPNG } from '../utils/qrExporter';
@@ -18,6 +19,15 @@ export const QRViewerModal: React.FC<QRViewerModalProps> = ({
   onSimulateScan,
 }) => {
   const [copied, setCopied] = useState(false);
+  const { updateRestaurant } = useQR();
+  const [title, setTitle] = useState('');
+  const [savedTitle, setSavedTitle] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const initial = restaurant?.qrTitle || '';
+    setTitle(initial); setSavedTitle(initial); setError('');
+  }, [restaurant?.id, restaurant?.qrTitle]);
 
   if (!restaurant) return null;
 
@@ -31,17 +41,27 @@ export const QRViewerModal: React.FC<QRViewerModalProps> = ({
     }
   };
 
-  const handleDownloadPNG = () => {
-    downloadRestaurantQRPNG({
+  const saveTitle = async () => {
+    await updateRestaurant(restaurant.id, { qrTitle: title.trim() });
+    setSavedTitle(title.trim());
+  };
+  const handleDownloadPNG = async () => {
+    setBusy(true); setError('');
+    try {
+    if (title.trim() !== savedTitle) await saveTitle();
+    await downloadRestaurantQRPNG({
       url: permanentUrl,
       restaurantName: restaurant.name,
+      title,
       size: 1400,
     });
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-center max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
         
         {/* Top bar */}
         <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
@@ -59,12 +79,20 @@ export const QRViewerModal: React.FC<QRViewerModalProps> = ({
           </button>
         </div>
 
+        <div className="text-left mt-4 space-y-2">
+          <label htmlFor="qr-print-title" className="block text-xs font-bold">Título para imprimir (opcional)</label>
+          <input id="qr-print-title" value={title} maxLength={60} disabled={busy} onChange={e => setTitle(e.target.value)} placeholder="Ej. INCH | INCH SAN PEDRO" className="w-full bg-black border border-zinc-700 rounded-lg p-2 text-sm font-black" />
+          <p className="text-xs text-zinc-400">Independiente del nombre del restaurante. Se incluye en el PNG.</p>
+          <button disabled={busy || title.trim() === savedTitle} onClick={async () => { setBusy(true); setError(''); try { await saveTitle(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }} className="text-xs font-bold underline disabled:opacity-40">{busy ? 'Guardando…' : title.trim() === savedTitle ? 'Título guardado' : 'Guardar título'}</button>
+          {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
+        </div>
         {/* QR Canvas Display */}
         <div className="py-6 flex flex-col items-center">
           <div className="p-3 bg-white rounded-2xl shadow-lg border-2 border-white inline-block">
             <QRCanvas
               value={permanentUrl}
               size={230}
+              title={title}
             />
           </div>
           <span className="text-[11px] font-mono text-zinc-400 mt-3 bg-zinc-950 px-2.5 py-1 rounded-md border border-zinc-800">
@@ -107,6 +135,7 @@ export const QRViewerModal: React.FC<QRViewerModalProps> = ({
         <div className="space-y-2.5">
           <button
             onClick={handleDownloadPNG}
+            disabled={busy}
             className="w-full py-2.5 px-4 bg-white hover:bg-zinc-200 text-black font-bold text-xs rounded-xl transition-colors shadow-xs flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4 text-black" />

@@ -10,7 +10,7 @@ interface Env {
   ADMIN_TOKEN?: string;
   ALLOWED_ORIGIN?: string;
 }
-const columns = 'id, name, slug, targetUrl, status, scanCount, createdAt, updatedAt, lastScanAt, notes';
+const columns = 'id, name, slug, targetUrl, status, scanCount, createdAt, updatedAt, lastScanAt, notes, qrTitle';
 const json = (data: unknown, status = 200) => Response.json(data, { status });
 const fail = (message: string, status = 400): never => { throw new Response(JSON.stringify({ error: message }), { status, headers: { 'Content-Type': 'application/json' } }); };
 function textField(value: unknown, max: number, required = true): string {
@@ -26,7 +26,7 @@ function validate(data: any) {
   try { url = new URL(targetUrl); } catch { fail('URL inválida.'); }
   if (!['https:', 'http:'].includes(url!.protocol) || url!.username || url!.password) fail('La URL debe usar HTTP o HTTPS y no contener credenciales.');
   if (!['activo', 'pausado'].includes(data.status)) fail('Estado inválido.');
-  return { name, slug, targetUrl: url!.href, status: data.status, notes: textField(data.notes ?? '', 2000, false) };
+  return { name, slug, targetUrl: url!.href, status: data.status, notes: textField(data.notes ?? '', 2000, false), qrTitle: textField(data.qrTitle ?? '', 60, false) };
 }
 function validateSettings(data: any) {
   const baseUrl = textField(data.baseUrl, 2048);
@@ -81,7 +81,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
     const data = validate(await body(request));
     const now = new Date().toISOString();
     const row = { id: crypto.randomUUID(), ...data, scanCount: 0, createdAt: now, updatedAt: now, lastScanAt: null };
-    await env.DB.prepare(`INSERT INTO restaurants (${columns}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(row.id, row.name, row.slug, row.targetUrl, row.status, 0, now, now, null, row.notes).run();
+    await env.DB.prepare(`INSERT INTO restaurants (${columns}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(row.id, row.name, row.slug, row.targetUrl, row.status, 0, now, now, null, row.notes, row.qrTitle).run();
     return json(row, 201);
   }
   if (path.startsWith('/api/restaurants/')) {
@@ -96,7 +96,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const data = validate({ ...existing, ...await body(request) });
       if (data.slug !== existing.slug) fail('El identificador es permanente: cambiarlo rompería los QR impresos.');
       const now = new Date().toISOString();
-      await env.DB.prepare('UPDATE restaurants SET name = ?, targetUrl = ?, status = ?, notes = ?, updatedAt = ? WHERE id = ?').bind(data.name, data.targetUrl, data.status, data.notes, now, id).run();
+      await env.DB.prepare('UPDATE restaurants SET name = ?, targetUrl = ?, status = ?, notes = ?, qrTitle = ?, updatedAt = ? WHERE id = ?').bind(data.name, data.targetUrl, data.status, data.notes, data.qrTitle, now, id).run();
       return json({ ...existing, ...data, updatedAt: now });
     }
   }
@@ -112,7 +112,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
       const count = item.scanCount ?? 0;
       if (!Number.isSafeInteger(count) || count < 0) fail('Contador inválido.');
       const date = (value: unknown) => { if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) fail('Fecha inválida.'); return new Date(value as string).toISOString(); };
-      statements.push(env.DB.prepare(`INSERT INTO restaurants (${columns}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(slug) DO NOTHING`).bind(crypto.randomUUID(), row.name, row.slug, row.targetUrl, row.status, count, date(item.createdAt), date(item.updatedAt), item.lastScanAt ? date(item.lastScanAt) : null, row.notes));
+      statements.push(env.DB.prepare(`INSERT INTO restaurants (${columns}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(slug) DO NOTHING`).bind(crypto.randomUUID(), row.name, row.slug, row.targetUrl, row.status, count, date(item.createdAt), date(item.updatedAt), item.lastScanAt ? date(item.lastScanAt) : null, row.notes, row.qrTitle));
     }
     if (data.settings) {
       const settings = validateSettings(data.settings);

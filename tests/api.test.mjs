@@ -9,6 +9,7 @@ const sample = { name: 'Mesón de prueba', slug: 'prueba', targetUrl: 'https://e
 beforeEach(() => {
   db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../migrations/0001_initial.sql', import.meta.url), 'utf8'));
+  db.exec(readFileSync(new URL('../migrations/0002_qr_title.sql', import.meta.url), 'utf8'));
   const wrap = (sql, values = []) => ({
     bind: (...args) => wrap(sql, args),
     first: async () => db.prepare(sql).get(...values) ?? null,
@@ -75,4 +76,21 @@ test('settings persist and validate the public address', async () => {
   assert.equal((await request('/settings', 'PUT', config)).status, 200);
   assert.deepEqual(await (await request('/settings')).json(), config);
   assert.equal((await request('/settings', 'PUT', { ...config, baseUrl: 'javascript:x' })).status, 400);
+});
+
+test('print title persists independently, is validated and survives backup import', async () => {
+  const created = await (await request('/restaurants', 'POST', { ...sample, qrTitle: 'CARTA | TERRAZA' })).json();
+  assert.equal(created.qrTitle, 'CARTA | TERRAZA');
+  const updated = await (await request(`/restaurants/${created.id}`, 'PUT', { qrTitle: 'MENÚ DEL DÍA' })).json();
+  assert.equal(updated.name, sample.name);
+  assert.equal(updated.slug, sample.slug);
+  assert.equal(updated.targetUrl, sample.targetUrl);
+  assert.equal(updated.qrTitle, 'MENÚ DEL DÍA');
+  assert.equal((await request(`/restaurants/${created.id}`, 'PUT', { qrTitle: 'x'.repeat(61) })).status, 400);
+  const backup = await (await request('/restaurants')).json();
+  assert.equal(backup[0].qrTitle, 'MENÚ DEL DÍA');
+  await request(`/restaurants/${created.id}`, 'DELETE');
+  assert.equal((await request('/import', 'POST', { restaurants: backup })).status, 200);
+  const restored = await (await request('/restaurants')).json();
+  assert.equal(restored[0].qrTitle, 'MENÚ DEL DÍA');
 });

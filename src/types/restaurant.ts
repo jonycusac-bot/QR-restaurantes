@@ -9,6 +9,7 @@ export interface RestaurantQR {
   updatedAt: string;
   lastScanAt?: string;
   notes?: string;
+  qrTitle?: string;
 }
 
 export interface AppSettings {
