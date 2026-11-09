@@ -45,7 +45,7 @@ const MainDashboard: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveRestaurant = (data: {
+  const handleSaveRestaurant = async (data: {
     name: string;
     slug: string;
     targetUrl: string;
@@ -53,9 +53,9 @@ const MainDashboard: React.FC = () => {
     notes?: string;
   }) => {
     if (editingRestaurant) {
-      updateRestaurant(editingRestaurant.id, data);
+      await updateRestaurant(editingRestaurant.id, data);
     } else {
-      addRestaurant(data);
+      await addRestaurant(data);
     }
   };
 
@@ -85,6 +85,7 @@ const MainDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-amber-500 selection:text-black">
       
+      {!import.meta.env.VITE_API_BASE_URL && <div className="bg-amber-950 text-amber-200 px-4 py-2 text-xs">Modo local: los datos se guardan solo en este navegador. Exporta una copia antes de activar Cloudflare.</div>}
       {/* Dark Header */}
       <Header
         activeView={activeView}
@@ -100,7 +101,7 @@ const MainDashboard: React.FC = () => {
             restaurants={restaurants}
             onOpenCreate={handleOpenCreate}
             onEdit={handleOpenEdit}
-            onDelete={deleteRestaurant}
+            onDelete={async id => { try { await deleteRestaurant(id); } catch (e) { window.alert((e as Error).message); } }}
             onViewQR={(r) => setViewingQRRestaurant(r)}
             getPermanentQRUrl={getPermanentQRUrl}
           />

@@ -1,26 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { RestaurantQR, AppSettings } from '../types/restaurant';
+import { CloudQRProvider } from './CloudQRProvider';
 import { INITIAL_RESTAURANTS, INITIAL_SETTINGS } from '../data/initialData';
 
 interface QRContextType {
   restaurants: RestaurantQR[];
   settings: AppSettings;
-  addRestaurant: (data: { name: string; slug: string; targetUrl: string; notes?: string; status?: 'activo' | 'pausado' }) => RestaurantQR;
-  updateRestaurant: (id: string, updates: Partial<RestaurantQR>) => void;
-  deleteRestaurant: (id: string) => void;
+  addRestaurant: (data: { name: string; slug: string; targetUrl: string; notes?: string; status?: 'activo' | 'pausado' }) => RestaurantQR | Promise<RestaurantQR>;
+  updateRestaurant: (id: string, updates: Partial<RestaurantQR>) => void | Promise<void>;
+  deleteRestaurant: (id: string) => void | Promise<void>;
   recordScan: (slug: string) => RestaurantQR | null;
   getPermanentQRUrl: (slug: string) => string;
-  updateSettings: (updates: Partial<AppSettings>) => void;
-  exportDataJSON: () => void;
-  importDataJSON: (jsonStr: string) => boolean;
-  resetToDemoData: () => void;
+  updateSettings: (updates: Partial<AppSettings>) => void | Promise<void>;
+  exportDataJSON: () => void | Promise<void>;
+  importDataJSON: (jsonStr: string) => boolean | Promise<boolean>;
+  resetToDemoData: () => void | Promise<void>;
 }
 
 const STORAGE_KEY = 'qr_restaurantes_v2';
 
-const QRContext = createContext<QRContextType | undefined>(undefined);
+export const QRContext = createContext<QRContextType | undefined>(undefined);
 
-export const QRProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const LocalQRProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [restaurants, setRestaurants] = useState<RestaurantQR[]>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_restaurants`);
@@ -227,3 +228,5 @@ export const useQR = () => {
   if (!ctx) throw new Error('useQR must be used within QRProvider');
   return ctx;
 };
+
+export const QRProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => import.meta.env.VITE_API_BASE_URL ? <CloudQRProvider>{children}</CloudQRProvider> : <LocalQRProvider>{children}</LocalQRProvider>;

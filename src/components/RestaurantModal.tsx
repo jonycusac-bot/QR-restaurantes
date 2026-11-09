@@ -12,7 +12,7 @@ interface RestaurantModalProps {
     targetUrl: string;
     status: 'activo' | 'pausado';
     notes?: string;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 export const RestaurantModal: React.FC<RestaurantModalProps> = ({
@@ -21,6 +21,8 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
@@ -29,6 +31,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
   const [autoSlug, setAutoSlug] = useState(true);
 
   useEffect(() => {
+    setSaveError('');
     if (restaurant) {
       setName(restaurant.name);
       setSlug(restaurant.slug);
@@ -59,11 +62,12 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !slug.trim() || !targetUrl.trim()) return;
 
-    onSave({
+    setSaving(true); setSaveError('');
+    try { await onSave({
       name: name.trim(),
       slug: slug.trim(),
       targetUrl: targetUrl.trim(),
@@ -71,6 +75,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
       notes: notes.trim() || undefined,
     });
     onClose();
+    } catch (e) { setSaveError((e as Error).message); } finally { setSaving(false); }
   };
 
   if (!isOpen) return null;
@@ -131,6 +136,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
                 required
                 placeholder="ej. el-roble"
                 value={slug}
+                disabled={!!restaurant}
                 onChange={(e) => {
                   setAutoSlug(false);
                   setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '-'));
@@ -212,6 +218,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
             />
           </div>
 
+          {saveError && <p role="alert" className="text-red-400 text-sm">{saveError}</p>}
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
             <button
@@ -223,6 +230,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
             </button>
             <button
               type="submit"
+              disabled={saving}
               className="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-lg transition-colors shadow-xs"
             >
               {restaurant ? 'Guardar Cambios' : 'Crear Restaurante y QR'}

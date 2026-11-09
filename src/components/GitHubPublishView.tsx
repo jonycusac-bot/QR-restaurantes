@@ -38,13 +38,14 @@ export const GitHubPublishView: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings({
+    try { await updateSettings({
       baseUrl: baseUrlInput.trim(),
       githubUsername: githubUser.trim(),
       githubRepo: githubRepo.trim(),
     });
+    } catch (e) { setImportError((e as Error).message); return; }
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
   };
@@ -61,10 +62,10 @@ export const GitHubPublishView: React.FC = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
       if (content) {
-        const ok = importDataJSON(content);
+        const ok = await importDataJSON(content);
         if (ok) {
           setImportSuccess(true);
           setImportError(null);

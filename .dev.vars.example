@@ -1,0 +1,4 @@
+# Copiar a .dev.vars solo para las pruebas locales. No subir la clave a GitHub.
+ADMIN_TOKEN=clave-local-de-prueba-de-al-menos-32-caracteres
+# Solo necesario si el frontend está en otro origen, sin barra final:
+# ALLOWED_ORIGIN=https://jonycusac-bot.github.io

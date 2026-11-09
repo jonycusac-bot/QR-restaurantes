@@ -24,13 +24,23 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Instalar dependencias
-        run: npm ci || npm install
+        run: npm ci --legacy-peer-deps
+
+      - name: Comprobar TypeScript y API
+        run: |
+          npm run lint
+          npm run test:api
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
 
       - name: Compilar aplicación Vite
+        env:
+          VITE_API_BASE_URL: https://qr-restaurantes.jonycusac.workers.dev/api
         run: npm run build
 
       - name: Subir artefacto de Pages

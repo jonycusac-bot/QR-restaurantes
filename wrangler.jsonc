@@ -1,0 +1,10 @@
+{
+  "name": "qr-restaurantes",
+  "main": "worker/index.ts",
+  "account_id": "f732c02bdb73d8bb8d944ba5a6d6481d",
+  "workers_dev": true,
+  "vars": { "ALLOWED_ORIGIN": "https://jonycusac-bot.github.io" },
+  "compatibility_date": "2026-11-04",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
+  "d1_databases": [{ "binding": "DB", "database_name": "qr-restaurantes", "database_id": "71d408d3-737b-4f34-88bc-d5ebcae5b20f", "migrations_dir": "migrations" }]
+}

@@ -1,3 +1,4 @@
+import { PublicRedirect } from './PublicRedirect';
 import React, { useEffect, useState } from 'react';
 import { useQR } from '../context/QRContext';
 import { RestaurantQR } from '../types/restaurant';
@@ -8,7 +9,7 @@ interface RedirectScreenProps {
   onGoToAdmin: () => void;
 }
 
-export const RedirectScreen: React.FC<RedirectScreenProps> = ({ slug, onGoToAdmin }) => {
+const LocalRedirectScreen: React.FC<RedirectScreenProps> = ({ slug, onGoToAdmin }) => {
   const { restaurants, recordScan } = useQR();
   const [restaurant, setRestaurant] = useState<RestaurantQR | null>(null);
   const [countdown, setCountdown] = useState<number>(2);
@@ -144,3 +145,5 @@ export const RedirectScreen: React.FC<RedirectScreenProps> = ({ slug, onGoToAdmi
     </div>
   );
 };
+
+export const RedirectScreen: React.FC<RedirectScreenProps> = props => import.meta.env.VITE_API_BASE_URL ? <PublicRedirect slug={props.slug} /> : <LocalRedirectScreen {...props} />;
