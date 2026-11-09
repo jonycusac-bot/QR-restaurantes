@@ -6,7 +6,7 @@ import { INITIAL_RESTAURANTS, INITIAL_SETTINGS } from '../data/initialData';
 interface QRContextType {
   restaurants: RestaurantQR[];
   settings: AppSettings;
-  addRestaurant: (data: { name: string; slug: string; targetUrl: string; notes?: string; status?: 'activo' | 'pausado' }) => RestaurantQR | Promise<RestaurantQR>;
+  addRestaurant: (data: { name: string; slug: string; targetUrl: string; notes?: string; qrTitle?: string; status?: 'activo' | 'pausado' }) => RestaurantQR | Promise<RestaurantQR>;
   updateRestaurant: (id: string, updates: Partial<RestaurantQR>) => void | Promise<void>;
   deleteRestaurant: (id: string) => void | Promise<void>;
   recordScan: (slug: string) => RestaurantQR | null;
@@ -64,7 +64,7 @@ const LocalQRProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     name: string;
     slug: string;
     targetUrl: string;
-    notes?: string;
+    notes?: string; qrTitle?: string;
     status?: 'activo' | 'pausado';
   }): RestaurantQR => {
     // Sanitize slug
@@ -97,6 +97,7 @@ const LocalQRProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       notes: data.notes?.trim() || undefined,
+      qrTitle: data.qrTitle?.trim() || '',
     };
 
     setRestaurants(prev => [newRest, ...prev]);

@@ -50,7 +50,7 @@ const MainDashboard: React.FC = () => {
     slug: string;
     targetUrl: string;
     status: 'activo' | 'pausado';
-    notes?: string;
+    notes?: string; qrTitle?: string;
   }) => {
     if (editingRestaurant) {
       await updateRestaurant(editingRestaurant.id, data);

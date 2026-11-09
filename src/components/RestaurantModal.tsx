@@ -11,7 +11,7 @@ interface RestaurantModalProps {
     slug: string;
     targetUrl: string;
     status: 'activo' | 'pausado';
-    notes?: string;
+    notes?: string; qrTitle?: string;
   }) => void | Promise<void>;
 }
 
@@ -28,6 +28,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
   const [targetUrl, setTargetUrl] = useState('');
   const [status, setStatus] = useState<'activo' | 'pausado'>('activo');
   const [notes, setNotes] = useState('');
+  const [qrTitle, setQrTitle] = useState('');
   const [autoSlug, setAutoSlug] = useState(true);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
       setTargetUrl(restaurant.targetUrl);
       setStatus(restaurant.status);
       setNotes(restaurant.notes || '');
+      setQrTitle(restaurant.qrTitle || '');
       setAutoSlug(false);
     } else {
       setName('');
@@ -45,6 +47,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
       setTargetUrl('');
       setStatus('activo');
       setNotes('');
+      setQrTitle('');
       setAutoSlug(true);
     }
   }, [restaurant, isOpen]);
@@ -72,7 +75,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
       slug: slug.trim(),
       targetUrl: targetUrl.trim(),
       status,
-      notes: notes.trim() || undefined,
+      notes: notes.trim() || undefined, qrTitle: qrTitle.trim(),
     });
     onClose();
     } catch (e) { setSaveError((e as Error).message); } finally { setSaving(false); }
@@ -82,7 +85,7 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
@@ -120,6 +123,11 @@ export const RestaurantModal: React.FC<RestaurantModalProps> = ({
             />
           </div>
 
+          <div className="rounded-xl border border-amber-500/40 p-3 space-y-2">
+            <label htmlFor="restaurant-qr-title" className="block text-xs font-bold text-white">Título de la franja del QR (opcional)</label>
+            <input id="restaurant-qr-title" type="text" maxLength={60} value={qrTitle} onChange={e => setQrTitle(e.target.value)} placeholder="Ej. INCH | INCH SAN PEDRO" className="w-full p-2.5 text-sm font-black bg-black border border-zinc-700 rounded-lg text-white" />
+            <p className="text-xs text-zinc-400">Texto independiente del restaurante. Se imprime en blanco y negrita sobre una franja negra.</p>
+          </div>
           {/* Slug / Permanent identifier */}
           <div>
             <div className="flex items-center justify-between mb-1">

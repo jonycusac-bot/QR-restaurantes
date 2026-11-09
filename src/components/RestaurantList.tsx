@@ -274,7 +274,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                       className="cursor-pointer shrink-0 p-1 bg-white rounded-lg shadow-sm hover:scale-105 transition-transform"
                       title="Haz clic para ver en grande"
                     >
-                      <QRCanvas value={permanentUrl} size={80} />
+                      <QRCanvas value={permanentUrl} size={80} title={restaurant.qrTitle} />
                     </div>
 
                     {/* Stats & Url */}
@@ -329,7 +329,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                       onClick={() =>
                         downloadRestaurantQRPNG({
                           url: permanentUrl,
-                          restaurantName: restaurant.name,
+                          restaurantName: restaurant.name, title: restaurant.qrTitle,
                           size: 1400,
                         })
                       }
@@ -344,7 +344,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                       onClick={() => onViewQR(restaurant)}
                       className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg transition-colors border border-zinc-700"
                     >
-                      Ver QR
+                      QR y título
                     </button>
                   </div>
 
